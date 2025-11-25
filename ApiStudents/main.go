@@ -17,7 +17,7 @@ func main() {
   e.Use(middleware.Recover())
 
   // Routes
-  e.GET("/students", getStundent)
+  e.GET("/students", getStudent)
 
   // Start server
   if err := e.Start(":8080"); err != nil && !errors.Is(err, http.ErrServerClosed) {
