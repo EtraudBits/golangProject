@@ -17,7 +17,11 @@ func main() {
   e.Use(middleware.Recover()) // adicona um middleware que recupera o servidor caso aconteça um panic, evitando que a aplicação caia.
 
   // Routes // Define rotas HTTP usando métodos
-  e.GET("/students", getStudent)
+  e.GET("/students", getStudents)
+  e.POST("/students", createStudent)
+  e.GET("/students/ :id", getStudent) // No singular queremos pegar apenas um estudante
+  e.PUT("/students/ :id", updateStudent)
+  e.DELETE("/students/ :id", deleteStudent)
 
   // Start server // inica o servidor na porta "8080"
   if err := e.Start(":8080"); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -26,6 +30,28 @@ func main() {
 }
 
 // Handler //Funcões executada quando a rota é chamada
-func getStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder.
+func getStudents(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder.
   return c.String(http.StatusOK, "List of all students") // retorna uma resposta HTTP com status 200 (ok)
+}
+
+func createStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder.
+  return c.String(http.StatusOK, "Create student") // retorna uma resposta HTTP com status 200 (ok)
+}
+
+func getStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder.
+  id := c.Param("id") //Obtém o parâmetro de rota chamado "id" da URL. ->ex.: em /studante/10 -> id será "10"
+  getStud := fmt.Sprintf("Get %s student", id)
+  return c.String(http.StatusOK, GetStud) // retorna uma resposta HTTP com status 200 (ok)
+}
+
+func updateStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder.
+  id := c.Param("id")// captura o "id" enviado na URL para identificar qual recurso deve ser atualizado
+  updateStud := fmt.Sprintf("Update %s student", id)
+  return c.String(http.StatusOK, updateStud) // retorna uma resposta HTTP com status 200 (ok)
+}
+
+func deleteStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder.
+  id := c.Param("id") // Recebe o parâmetro "id" que indica qual estudante será deletado
+  deleteStud := fmt.Sprintf("Delete %s student", id)
+  return c.String(http.StatusOK, DeletStud) // retorna uma resposta HTTP com status 200 (ok)
 }
