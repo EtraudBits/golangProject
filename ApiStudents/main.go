@@ -16,16 +16,16 @@ func main() {
   e.Use(middleware.Logger())
   e.Use(middleware.Recover())
 
-  // Routes
+  // Routes // Rotas
   e.GET("/students", getStudent)
 
-  // Start server
+  // Start server // Iniciando o Servidor
   if err := e.Start(":8080"); err != nil && !errors.Is(err, http.ErrServerClosed) {
     slog.Error("failed to start server", "error", err)
   }
 }
 
-// Handler
+// Handler //Funcões para Rotas
 func getStudent(c echo.Context) error {
   return c.String(http.StatusOK, "List of all students")
 }
