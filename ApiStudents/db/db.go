@@ -3,8 +3,9 @@ package db
 import (
 	"fmt"
 	"log"
-  	"gorm.io/driver/sqlite" //importa o GORM
-  	"gorm.io/gorm"
+
+	"gorm.io/driver/sqlite" //importa o GORM
+	"gorm.io/gorm"
 )
 
 type Student struct {
@@ -18,7 +19,7 @@ type Student struct {
 }
 
 
-func Init() *gorm.DB {
+func Init() *gorm.DB { //função Publica
 // github.com/mattn/go-sqlite3
 	db, err := gorm.Open(sqlite.Open("student.db"), &gorm.Config{}) //a forma que se cria o GORM usando o Banco de Dados SQLite
 	if err != nil { //trata o erro, caso não consiga executar

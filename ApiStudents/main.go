@@ -1,11 +1,14 @@
 package main
 
 import (
-  "github.com/labstack/echo/v4" // framework web usado para criar rotas e servidor HTTP
-  "github.com/labstack/echo/v4/middleware" //middleware já prontos do Echo
-  "log/slog" // logger estruturado da biblioteca Padrão
-  "net/http" // códigos e funções HTTP da standard lib
-  "errors" // para manipulação de erros
+	"errors" // para manipulação de erros
+	"fmt"
+	"log/slog" // logger estruturado da biblioteca Padrão
+	"net/http" // códigos e funções HTTP da standard lib
+
+	"github.com/EtraudBits/golangProject/ApiStudents/db" //importa o modulo da pasta go.mod - acrescentando no final /db
+	"github.com/labstack/echo/v4"                        // framework web usado para criar rotas e servidor HTTP
+	"github.com/labstack/echo/v4/middleware"             //middleware já prontos do Echo
 )
 
 func main() {
@@ -17,11 +20,11 @@ func main() {
   e.Use(middleware.Recover()) // adicona um middleware que recupera o servidor caso aconteça um panic, evitando que a aplicação caia.
 
   // Routes // Define rotas HTTP usando métodos
-  e.GET("/students", getStudents)
-  e.POST("/students", createStudent)
-  e.GET("/students/ :id", getStudent) // No singular queremos pegar apenas um estudante
-  e.PUT("/students/ :id", updateStudent)
-  e.DELETE("/students/ :id", deleteStudent)
+  e.GET("/students", getStudents) // buscar lista de estudantes
+  e.POST("/students", createStudent) //criar estudantes
+  e.GET("/students/:id", getStudent) // No singular queremos pegar apenas um estudante
+  e.PUT("/students/:id", updateStudent) //Atualizar 
+  e.DELETE("/students/:id", deleteStudent) //Deletar
 
   // Start server // inica o servidor na porta "8080"
   if err := e.Start(":8080"); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -35,13 +38,14 @@ func getStudents(c echo.Context) error { //recebe um echo.context, que contém i
 }
 
 func createStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder.
+  db.AddStudent() //funçao publica na pasta db
   return c.String(http.StatusOK, "Create student") // retorna uma resposta HTTP com status 200 (ok)
 }
 
 func getStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder.
   id := c.Param("id") //Obtém o parâmetro de rota chamado "id" da URL. ->ex.: em /studante/10 -> id será "10"
   getStud := fmt.Sprintf("Get %s student", id)
-  return c.String(http.StatusOK, GetStud) // retorna uma resposta HTTP com status 200 (ok)
+  return c.String(http.StatusOK, getStud) // retorna uma resposta HTTP com status 200 (ok)
 }
 
 func updateStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder.
@@ -53,5 +57,5 @@ func updateStudent(c echo.Context) error { //recebe um echo.context, que contém
 func deleteStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder.
   id := c.Param("id") // Recebe o parâmetro "id" que indica qual estudante será deletado
   deleteStud := fmt.Sprintf("Delete %s student", id)
-  return c.String(http.StatusOK, DeletStud) // retorna uma resposta HTTP com status 200 (ok)
+  return c.String(http.StatusOK, deleteStud) // retorna uma resposta HTTP com status 200 (ok)
 }
