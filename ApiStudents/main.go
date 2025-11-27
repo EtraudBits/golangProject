@@ -38,7 +38,11 @@ func getStudents(c echo.Context) error { //recebe um echo.context, que contém i
 }
 
 func createStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder.
-  db.AddStudent() //funçao publica na pasta db
+  student := db.Student {} // cria um bind para organizar as informações dinamica com o JSON
+  if err := c.Bind(&student); err != nil { //tratando erro
+    return err // já que na funcão createStuendet retorna error
+  }
+  db.AddStudent(student) //funçao publica na pacote db -> Chama a função student dinamica acima
   return c.String(http.StatusOK, "Create student") // retorna uma resposta HTTP com status 200 (ok)
 }
 
