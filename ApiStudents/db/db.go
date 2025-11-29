@@ -23,7 +23,7 @@ type Student struct {
 
 func Init() *gorm.DB { //função Publica
 // github.com/mattn/go-sqlite3
-	db, err := gorm.Open(sqlite.Open("student.db"), &gorm.Config{}) //a forma que se cria o GORM usando o Banco de Dados SQLite
+	db, err := gorm.Open(sqlite.Open("./student.db"), &gorm.Config{}) //a forma que se cria o GORM usando o Banco de Dados SQLite
 	if err != nil { //trata o erro, caso não consiga executar
 		log.Fatalln(err) // se der algum erro ele para a aplicação (log.fatal)
 	}
