@@ -9,6 +9,10 @@ import (
 	"gorm.io/gorm"
 )
 
+//cria uma struct tipo Studenthandler
+type StudentHandler struct { //criação para poder atrelar as funções em uma estrutura especifica
+	DB *gorm.DB //estrutura DB apontando para o gorm.DB
+}
 // struct do tipo Student
 type Student struct {
 	gorm.Model //inclui as estruturas da struct model do pacote gorm
@@ -33,10 +37,14 @@ func Init() *gorm.DB { //função Publica
 	return db
 }
 
-func AddStudent (student Student) error { //função publica - pode usar fora do pacote db (inicia com a primeira letra MAIUCULA) passando o strudent como pararamento e retornar um erro.
-	db := Init() //não chama "db.Init" por já estamos dentro do pacote db. só inclui caso estejamos fora do pacote.
+func NewStudentHandler (db *gorm.DB) *StudentHandler {
+	return &StudentHandler{DB: db}
+}
+
+func (s *StudentHandler) AddStudent (student Student) error { //função publica - pode usar fora do pacote db (inicia com a primeira letra MAIUCULA) passando o strudent como pararamento e retornar um erro.
 	
-	if result := db.Create(&student); result.Error != nil { //temos que o usar o & (é comercial) para chamar a variavel
+	
+	if result := s.DB.Create(&student); result.Error != nil { //temos que o usar o & (é comercial) para chamar a variavel
 		return result.Error
 	}
 
@@ -45,12 +53,12 @@ func AddStudent (student Student) error { //função publica - pode usar fora do
 
 }
 
-func GetStudents () ([]Student, error) { //função publica -> listar usuario , retornando a lista de usuarios (estudantes) + erro.
+func (s *StudentHandler) GetStudents () ([]Student, error) { //função publica -> listar usuario , retornando a lista de usuarios (estudantes) + erro.
 students := []Student{} // retorna uma lista de usuarios (estudantes)
 
-db := Init () //inicializar o banco de dados
 
-err := db.Find(&students).Error//consultar essa tabela usando o metodo find do GORM
+
+err := s.DB.Find(&students).Error//consultar essa tabela usando o metodo find do GORM
 return students, err
 }
 
