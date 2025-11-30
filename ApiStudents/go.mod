@@ -7,6 +7,7 @@ toolchain go1.24.10
 require (
 	github.com/glebarez/sqlite v1.11.0
 	github.com/labstack/echo/v4 v4.13.4
+	github.com/rs/zerolog v1.34.0
 	gorm.io/gorm v1.31.1
 )
 

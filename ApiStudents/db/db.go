@@ -1,8 +1,7 @@
 package db
 
 import (
-	"fmt"
-	"log"
+	"github.com/rs/zerolog/log" //formatar os logs (deixar mais organizado)
 
 	//"gorm.io/driver/sqlite" // troque por: "github.com/glebarez/sqlite" abaixo
 	"github.com/glebarez/sqlite" //importa o GORM
@@ -29,7 +28,7 @@ func Init() *gorm.DB { //função Publica
 // github.com/mattn/go-sqlite3
 	db, err := gorm.Open(sqlite.Open("./student.db"), &gorm.Config{}) //a forma que se cria o GORM usando o Banco de Dados SQLite
 	if err != nil { //trata o erro, caso não consiga executar
-		log.Fatalln(err) // se der algum erro ele para a aplicação (log.fatal)
+		log.Fatal().Err(err).Msgf("Failed to initialize SQLite: %s", err.Error()) //usando log.Fatal para sinalizar o erro
 	}
 
 	db.AutoMigrate(&Student{}) //aponta para a struct Student (Gerenciar a estrutura Student)
@@ -45,10 +44,10 @@ func (s *StudentHandler) AddStudent (student Student) error { //função publica
 	
 	
 	if result := s.DB.Create(&student); result.Error != nil { //temos que o usar o & (é comercial) para chamar a variavel
+		log.Error().Msg("Failed to Create Student!")
 		return result.Error
 	}
-
-	fmt.Println("Create student!")
+	log.Info().Msg("Create Student!")
 	return nil  //caso não tenha ocorrido nenhum erro, passa a exibir a mensagem
 
 }
