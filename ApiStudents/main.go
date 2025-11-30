@@ -34,7 +34,12 @@ func main() {
 
 // Handler //Funcões executada quando a rota é chamada
 func getStudents(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder.
-  return c.String(http.StatusOK, "List of all students") // retorna uma resposta HTTP com status 200 (ok)
+  students, err := db.GetStudents()
+ 
+  if err != nil {
+    return c.String(http.StatusNotFound, "Failed to get students")
+  }
+  return c.JSON(http.StatusOK, students) // retorna uma resposta HTTP com status 200 (ok) -> para aplicações mais robustas chama o c.JSON
 }
 
 func createStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder. Função que recebe o POST

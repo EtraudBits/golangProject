@@ -44,3 +44,13 @@ func AddStudent (student Student) error { //função publica - pode usar fora do
 	return nil  //caso não tenha ocorrido nenhum erro, passa a exibir a mensagem
 
 }
+
+func GetStudents () ([]Student, error) { //função publica -> listar usuario , retornando a lista de usuarios (estudantes) + erro.
+students := []Student{} // retorna uma lista de usuarios (estudantes)
+
+db := Init () //inicializar o banco de dados
+
+err := db.Find(&students).Error//consultar essa tabela usando o metodo find do GORM
+return students, err
+}
+
