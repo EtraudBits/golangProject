@@ -33,13 +33,14 @@ func Init() *gorm.DB { //função Publica
 	return db
 }
 
-func AddStudent (student Student) { //função publica - pode usar fora do pacote db (inicia com a primeira letra MAIUCULA) passando o strudent como pararamento
+func AddStudent (student Student) error { //função publica - pode usar fora do pacote db (inicia com a primeira letra MAIUCULA) passando o strudent como pararamento e retornar um erro.
 	db := Init() //não chama "db.Init" por já estamos dentro do pacote db. só inclui caso estejamos fora do pacote.
 	
 	if result := db.Create(&student); result.Error != nil { //temos que o usar o & (é comercial) para chamar a variavel
-		fmt.Println ("Erro to create student")
+		return result.Error
 	}
 
 	fmt.Println("Create student!")
+	return nil  //caso não tenha ocorrido nenhum erro, passa a exibir a mensagem
 
 }

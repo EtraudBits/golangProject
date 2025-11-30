@@ -37,13 +37,17 @@ func getStudents(c echo.Context) error { //recebe um echo.context, que contém i
   return c.String(http.StatusOK, "List of all students") // retorna uma resposta HTTP com status 200 (ok)
 }
 
-func createStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder.
+func createStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder. Função que recebe o POST
   student := db.Student {} // cria um bind para organizar as informações dinamica com o JSON
-  if err := c.Bind(&student); err != nil { //tratando erro
-    return err // já que na funcão createStuendet retorna error
+
+  if err := c.Bind(&student); err != nil { //Adequa a estrutura do struct 
+    return err // já que na funcão createStuendet retorna error, caso não consiga executar a função retorna erro.
   }
-  db.AddStudent(student) //funçao publica na pacote db -> Chama a função student dinamica acima
-  return c.String(http.StatusOK, "Create student") // retorna uma resposta HTTP com status 200 (ok)
+  if err := db.AddStudent(student); err != nil {
+     return c.String(http.StatusInternalServerError, "Error to Create student") // Caso ocorra o erro -> retorna uma resposta HTTP com erro interno do Servidor
+  } //funçao publica na pacote db -> Chama a função student dinamica acima, tratando o erro, se houver!
+  return c.String(http.StatusOK, "Create student") // canso não ocorra erro -> retorna uma resposta HTTP com status 200 (ok)
+  
 }
 
 func getStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder.
