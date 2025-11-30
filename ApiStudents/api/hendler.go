@@ -3,9 +3,13 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"strconv"
+
+	"errors"
 
 	"github.com/EtraudBits/golangProject/ApiStudents/db"
 	"github.com/labstack/echo/v4"
+	"gorm.io/gorm"
 )
 
 // Handler //Funcões executada quando a rota é chamada
@@ -32,9 +36,21 @@ func (api *API) createStudent(c echo.Context) error { //recebe um echo.context, 
 }
 
 func (api *API) getStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder.
-  id := c.Param("id") //Obtém o parâmetro de rota chamado "id" da URL. ->ex.: em /studante/10 -> id será "10"
-  getStud := fmt.Sprintf("Get %s student", id)
-  return c.String(http.StatusOK, getStud) // retorna uma resposta HTTP com status 200 (ok)
+  id, err := strconv.Atoi(c.Param("id")) //Obtém o parâmetro de rota chamado "id" da URL. ->ex.: em /studante/10 -> id será "10" -> transforma a string em Inteiro usando strconv.Atoi
+  if err != nil { //trata o erro
+	return c.String(http.StatusInternalServerError, "Failed to Get student ID") //msg do erro quando vem do servidor (por ex.: digitou um ID que não exista no BD)
+  }
+  
+  student, err := api.DB.GetStudent(id) //Pode não encontrar um student com esse id -> STATUS NOT FOUND (404) ou pode ter algum problema para encontrar o student (temos que tratar esses erros)
+  if errors.Is(err, gorm.ErrRecordNotFound) {
+		return c.String(http.StatusNotFound, "Student not found") 
+  }
+
+  if err != nil {
+		return c.String(http.StatusInternalServerError, "Failed to Get student") //msg do erro quando vem do servidor (por ex.: digitou um ID que não exista no BD)
+  }
+
+  return c.JSON(http.StatusOK, student) // se não ocorrer nenhum dos dois erros acima -> retorna uma resposta HTTP com status 200 (ok)
 }
 
 func (api *API) updateStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder.

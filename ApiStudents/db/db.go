@@ -54,10 +54,13 @@ func (s *StudentHandler) AddStudent (student Student) error { //função publica
 
 func (s *StudentHandler) GetStudents () ([]Student, error) { //função publica -> listar usuario , retornando a lista de usuarios (estudantes) + erro.
 students := []Student{} // retorna uma lista de usuarios (estudantes)
-
-
-
 err := s.DB.Find(&students).Error//consultar essa tabela usando o metodo find do GORM
 return students, err
+}
+
+func (s *StudentHandler) GetStudent (id int) (Student, error) { //função publica -> Busca um unico usuario , retornando um usuarios (estudante) + erro. buscando pelo o ID
+var student Student // variavel student do tipo Stundet (guarda um usuarios (estudante))
+err := s.DB.First(&student, id).Error//para este caso usamos o First para procurar apenas um dado, diferente do Find. (metodo do GORM) usando o parametro ID.
+return student, err
 }
 
