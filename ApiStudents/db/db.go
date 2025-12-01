@@ -64,3 +64,9 @@ err := s.DB.First(&student, id).Error//para este caso usamos o First para procur
 return student, err
 }
 
+//metodo para salvar os update (atualização) do hendler.go
+func (s *StudentHandler) UpdateStudent (updateStudent Student) error { 
+	return s.DB.Save(&updateStudent).Error //Salva os dados atualizado
+
+
+}
