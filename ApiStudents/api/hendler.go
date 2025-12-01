@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -83,10 +82,27 @@ if err := api.DB.UpdateStudent(student); err != nil {
 }
 
 func (api *API) deleteStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder.
-  id := c.Param("id") // Recebe o parâmetro "id" que indica qual estudante será deletado
-  deleteStud := fmt.Sprintf("Delete %s student", id)
-  return c.String(http.StatusOK, deleteStud) // retorna uma resposta HTTP com status 200 (ok)
+  id, err := strconv.Atoi(c.Param("id")) //Obtém o parâmetro de rota chamado "id" da URL. ->ex.: em /studante/10 -> id será "10" -> transforma a string em Inteiro usando strconv.Atoi
+    if err != nil { //trata o erro
+	return c.String(http.StatusInternalServerError, "Failed to Get student ID") //msg do erro quando vem do servidor (por ex.: digitou um ID que não exista no BD)
 }
+	student, err := api.DB.GetStudent(id) //Pode não encontrar um student com esse id -> STATUS NOT FOUND (404) ou pode ter algum problema para encontrar o student (temos que tratar esses erros)
+  if errors.Is(err, gorm.ErrRecordNotFound) {
+		return c.String(http.StatusNotFound, "Student not found") 
+  }
+
+  if err != nil {
+		return c.String(http.StatusInternalServerError, "Failed to Get student") //msg do erro quando vem do servidor (por ex.: digitou um ID que não exista no BD)
+  }
+
+  if err := api.DB.DeleteStudent(student); err != nil {
+	return c.String(http.StatusInternalServerError, "Failed to delete student")
+  }
+  
+  return c.JSON(http.StatusOK, student) // retorna uma resposta HTTP com status 200 (ok)
+}
+
+//busca a função de deletar do db
 
 //função para fazer a comparação do receivedStudent e student (updatingStudant) - do tipo db.Student
 func upDateStudentInfo(receivedStudent, student db.Student) db.Student {

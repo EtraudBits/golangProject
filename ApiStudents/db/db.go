@@ -67,6 +67,9 @@ return student, err
 //metodo para salvar os update (atualização) do hendler.go
 func (s *StudentHandler) UpdateStudent (updateStudent Student) error { 
 	return s.DB.Save(&updateStudent).Error //Salva os dados atualizado
+}
 
-
+//metodo para deletar 
+func (s *StudentHandler) DeleteStudent (student Student) error { 
+	return s.DB.Delete(&student).Error //Deleta o dado informado
 }
