@@ -13,8 +13,16 @@ import (
 	"gorm.io/gorm"
 )
 
+// getStudents godoc
+// @Summary Lista estudantes
+// @Description Retorna todos os estudantes cadastrados
+// @Tags students
+// @Produce json
+// @Success 200 {object} map[string][]schemas.StudentResponse
+// @Router /students [get]
+
 // Handler //Funcões executada quando a rota é chamada
-func (api *API) getStudents(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder.
+func (api *API) getStudents(c echo.Context) error {  //recebe um echo.context, que contém informações da requisição e métodos para responder.
   students, err := api.DB.GetStudents() //funções que chama do repositório db a Função GetStudents.
  
   if err != nil {
@@ -41,6 +49,17 @@ func (api *API) getStudents(c echo.Context) error { //recebe um echo.context, qu
   
   return c.JSON(http.StatusOK, listOfStudents) // retorna uma resposta HTTP com status 200 (ok) -> para aplicações mais robustas chama o c.JSON
 }
+
+// createStudent godoc
+// @Summary Cria estudante
+// @Description Cria um novo estudante
+// @Tags students
+// @Accept json
+// @Produce json
+// @Param student body StudentRequest true "Dados do estudante"
+// @Success 201 {object} schemas.StudentResponse
+// @Failure 400 {string} string
+// @Router /students [post]
 
 func (api *API) createStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder. Função que recebe o POST
   studentReq := StudentRequest{}
@@ -71,7 +90,16 @@ func (api *API) createStudent(c echo.Context) error { //recebe um echo.context, 
   
 }
 
-func (api *API) getStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder.
+// getStudent godoc
+// @Summary Busca estudante por ID
+// @Description Retorna um estudante pelo ID
+// @Tags students
+// @Produce json
+// @Param id path int true "ID do estudante"
+// @Success 200 {object} schemas.StudentResponse
+// @Failure 404 {string} string
+// @Router /students/{id} [get]
+  func (api *API) getStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder.
   id, err := strconv.Atoi(c.Param("id")) //Obtém o parâmetro de rota chamado "id" da URL. ->ex.: em /studante/10 -> id será "10" -> transforma a string em Inteiro usando strconv.Atoi
   if err != nil { //trata o erro
 	return c.String(http.StatusInternalServerError, "Failed to Get student ID") //msg do erro quando vem do servidor (por ex.: digitou um ID que não exista no BD)
@@ -89,6 +117,17 @@ func (api *API) getStudent(c echo.Context) error { //recebe um echo.context, que
   return c.JSON(http.StatusOK, student) // se não ocorrer nenhum dos dois erros acima -> retorna uma resposta HTTP com status 200 (ok)
 }
 
+// updateStudent godoc
+// @Summary Atualiza estudante
+// @Description Atualiza os dados de um estudante existente
+// @Tags students
+// @Accept json
+// @Produce json
+// @Param id path int true "ID do estudante"
+// @Param student body schemas.Student true "Dados para atualização"
+// @Success 200 {object} schemas.StudentResponse
+// @Failure 404 {string} string
+// @Router /students/{id} [put]
 func (api *API) updateStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder.
    id, err := strconv.Atoi(c.Param("id")) //Obtém o parâmetro de rota chamado "id" da URL. ->ex.: em /studante/10 -> id será "10" -> transforma a string em Inteiro usando strconv.Atoi
   if err != nil { //trata o erro
@@ -118,6 +157,15 @@ if err := api.DB.UpdateStudent(student); err != nil {
   return c.JSON(http.StatusOK, student) // retorna uma resposta HTTP com status 200 (ok)
 }
 
+// deleteStudent godoc
+// @Summary Deleta estudante
+// @Description Remove um estudante pelo ID
+// @Tags students
+// @Produce json
+// @Param id path int true "ID do estudante"
+// @Success 200 {object} schemas.StudentResponse
+// @Failure 404 {string} string
+// @Router /students/{id} [delete]
 func (api *API) deleteStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder.
   id, err := strconv.Atoi(c.Param("id")) //Obtém o parâmetro de rota chamado "id" da URL. ->ex.: em /studante/10 -> id será "10" -> transforma a string em Inteiro usando strconv.Atoi
     if err != nil { //trata o erro

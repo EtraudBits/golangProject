@@ -2,8 +2,11 @@ package api
 
 import (
 	"github.com/EtraudBits/golangProject/ApiStudents/db"
+
+	_ "github.com/EtraudBits/golangProject/ApiStudents/docs"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
 // cria uma struct TIPO api com dois campos -> echo e o db
@@ -12,6 +15,12 @@ type API struct {
 	DB *db.StudentHandler //(*) PONTEIRO tras tudo que o db irá usar 
 }
 
+// @title Sdudent API
+// @version 1.0
+// @description This is a sample server Student API
+// @host localhost:8080
+// @BasePath /
+// @schemes http
 
 func NewServer() *API {//Cria uma função que inicializa tudo -> função para ser o servidor -> Usando a Struct API
 
@@ -40,6 +49,7 @@ func NewServer() *API {//Cria uma função que inicializa tudo -> função para 
   api.Echo.GET("/students/:id", api.getStudent) // No singular queremos pegar apenas um estudante
   api.Echo.PUT("/students/:id", api.updateStudent) //Atualizar 
   api.Echo.DELETE("/students/:id", api.deleteStudent) //Deletar
+  api.Echo.GET("/swagger/*", echoSwagger.WrapHandler) //rota para configurar o swagger
   }
 
   //função para startar o server 

@@ -1,0 +1,105 @@
+definitions:
+  schemas.Student:
+    type: object
+  schemas.StudentResponse:
+    properties:
+      active:
+        type: boolean
+      age:
+        type: integer
+      cpf:
+        type: integer
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        description: temos que dizer como é nome do campo vai querer atrelar no json
+          que recebe no post
+        type: string
+      updatedAt:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /students/{id}:
+    delete:
+      description: Remove um estudante pelo ID
+      parameters:
+      - description: ID do estudante
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.StudentResponse'
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Deleta estudante
+      tags:
+      - students
+    get:
+      description: Retorna um estudante pelo ID
+      parameters:
+      - description: ID do estudante
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.StudentResponse'
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Busca estudante por ID
+      tags:
+      - students
+    put:
+      consumes:
+      - application/json
+      description: Atualiza os dados de um estudante existente
+      parameters:
+      - description: ID do estudante
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Dados para atualização
+        in: body
+        name: student
+        required: true
+        schema:
+          $ref: '#/definitions/schemas.Student'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schemas.StudentResponse'
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Atualiza estudante
+      tags:
+      - students
+swagger: "2.0"
