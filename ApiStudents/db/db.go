@@ -4,23 +4,14 @@ import (
 	"github.com/rs/zerolog/log" //formatar os logs (deixar mais organizado)
 
 	//"gorm.io/driver/sqlite" // troque por: "github.com/glebarez/sqlite" abaixo
-	"github.com/glebarez/sqlite" //importa o GORM
+	"github.com/EtraudBits/golangProject/ApiStudents/schemas" //pacote do repositório schemas
+	"github.com/glebarez/sqlite"                              //importa o GORM
 	"gorm.io/gorm"
 )
 
 //cria uma struct tipo Studenthandler
 type StudentHandler struct { //criação para poder atrelar as funções em uma estrutura especifica
 	DB *gorm.DB //estrutura DB apontando para o gorm.DB
-}
-// struct do tipo Student
-type Student struct {
-	gorm.Model //inclui as estruturas da struct model do pacote gorm
-	Name string `json:"Name"` //temos que dizer como é nome do campo vai querer atrelar no json que recebe no post
-	CPF int `json:"CPF"`
-	Email string `json:"Email"`
-	Age int `json:"Age"`
-	Active bool `json:"Active"`
-
 }
 
 
@@ -31,7 +22,7 @@ func Init() *gorm.DB { //função Publica
 		log.Fatal().Err(err).Msgf("Failed to initialize SQLite: %s", err.Error()) //usando log.Fatal para sinalizar o erro
 	}
 
-	db.AutoMigrate(&Student{}) //aponta para a struct Student (Gerenciar a estrutura Student)
+	db.AutoMigrate(&schemas.Student{}) //aponta para a struct Student (Gerenciar a estrutura Student)
 
 	return db
 }
@@ -40,7 +31,7 @@ func NewStudentHandler (db *gorm.DB) *StudentHandler {
 	return &StudentHandler{DB: db}
 }
 
-func (s *StudentHandler) AddStudent (student Student) error { //função publica - pode usar fora do pacote db (inicia com a primeira letra MAIUCULA) passando o strudent como pararamento e retornar um erro.
+func (s *StudentHandler) AddStudent (student schemas.Student) error { //função publica - pode usar fora do pacote db (inicia com a primeira letra MAIUCULA) passando o strudent como pararamento e retornar um erro.
 	
 	
 	if result := s.DB.Create(&student); result.Error != nil { //temos que o usar o & (é comercial) para chamar a variavel
@@ -52,24 +43,24 @@ func (s *StudentHandler) AddStudent (student Student) error { //função publica
 
 }
 
-func (s *StudentHandler) GetStudents () ([]Student, error) { //função publica -> listar usuario , retornando a lista de usuarios (estudantes) + erro.
-students := []Student{} // retorna uma lista de usuarios (estudantes)
+func (s *StudentHandler) GetStudents () ([]schemas.Student, error) { //função publica -> listar usuario , retornando a lista de usuarios (estudantes) + erro.
+students := []schemas.Student{} // retorna uma lista de usuarios (estudantes)
 err := s.DB.Find(&students).Error//consultar essa tabela usando o metodo find do GORM
 return students, err
 }
 
-func (s *StudentHandler) GetStudent (id int) (Student, error) { //função publica -> Busca um unico usuario , retornando um usuarios (estudante) + erro. buscando pelo o ID
-var student Student // variavel student do tipo Stundet (guarda um usuarios (estudante))
+func (s *StudentHandler) GetStudent (id int) (schemas.Student, error) { //função publica -> Busca um unico usuario , retornando um usuarios (estudante) + erro. buscando pelo o ID
+var student schemas.Student // variavel student do tipo Stundet (guarda um usuarios (estudante))
 err := s.DB.First(&student, id).Error//para este caso usamos o First para procurar apenas um dado, diferente do Find. (metodo do GORM) usando o parametro ID.
 return student, err
 }
 
 //metodo para salvar os update (atualização) do hendler.go
-func (s *StudentHandler) UpdateStudent (updateStudent Student) error { 
+func (s *StudentHandler) UpdateStudent (updateStudent schemas.Student) error { 
 	return s.DB.Save(&updateStudent).Error //Salva os dados atualizado
 }
 
 //metodo para deletar 
-func (s *StudentHandler) DeleteStudent (student Student) error { 
+func (s *StudentHandler) DeleteStudent (student schemas.Student) error { 
 	return s.DB.Delete(&student).Error //Deleta o dado informado
 }

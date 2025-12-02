@@ -6,8 +6,9 @@ import (
 
 	"errors"
 
-	"github.com/EtraudBits/golangProject/ApiStudents/db"
+	"github.com/EtraudBits/golangProject/ApiStudents/schemas" //pacote do repositório schemas
 	"github.com/labstack/echo/v4"
+	"github.com/rs/zerolog/log" //formatar os logs (deixar mais organizado)
 	"gorm.io/gorm"
 )
 
@@ -22,11 +23,27 @@ func (api *API) getStudents(c echo.Context) error { //recebe um echo.context, qu
 }
 
 func (api *API) createStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder. Função que recebe o POST
-  student := db.Student {} // cria um bind para organizar as informações dinamica com o JSON
-
-  if err := c.Bind(&student); err != nil { //Adequa a estrutura do struct 
+  studentReq := StudentRequest{}
+  // cria um bind para organizar as informações dinamica com o JSON -> usa os dados do request.go para validar a criação
+  if err := c.Bind(&studentReq); err != nil { //Adequa a estrutura do struct 
     return err // já que na funcão createStuendet retorna error, caso não consiga executar a função retorna erro.
   }
+
+  //chama o metodo validate do request.go
+  if err := studentReq.Validate(); err != nil {
+    log.Error().Err(err).Msg("[api] error validating struct")
+    return c.String(http.StatusBadRequest, "Erro validating student")
+  }
+  //converter a estrutura para o student
+  student := schemas.Student {
+  //faz um De - Para 
+  Name: studentReq.Name, //Name recebe sturdentReq.Name
+  Email: studentReq.Email, //Email recebe studentReq.Email
+  CPF: studentReq.CPF, //CPF recebe studentReq.CPF
+  Age: studentReq.Age, //Age recebe studentReq.Age
+  Active: *studentReq.Active, //Active recebe studentReq.Active -> pegando o ponteiro (*)
+}
+
   if err := api.DB.AddStudent(student); err != nil {
      return c.String(http.StatusInternalServerError, "Error to Create student") // Caso ocorra o erro -> retorna uma resposta HTTP com erro interno do Servidor
   } //funçao publica na pacote db -> Chama a função student dinamica acima, tratando o erro, se houver!
@@ -58,7 +75,7 @@ func (api *API) updateStudent(c echo.Context) error { //recebe um echo.context, 
 	return c.String(http.StatusInternalServerError, "Failed to Get student ID") //msg do erro quando vem do servidor (por ex.: digitou um ID que não exista no BD)
   }
   //precisamos procurar o que esta vindo do PUT para fazer a comparação com o dados atual.
-  receivedStudent := db.Student{} //variavel do estudante recebido
+  receivedStudent := schemas.Student{} //variavel do estudante recebido
   if err := c.Bind(&receivedStudent); err != nil {
 	return err
   }
@@ -105,7 +122,7 @@ func (api *API) deleteStudent(c echo.Context) error { //recebe um echo.context, 
 //busca a função de deletar do db
 
 //função para fazer a comparação do receivedStudent e student (updatingStudant) - do tipo db.Student
-func upDateStudentInfo(receivedStudent, student db.Student) db.Student {
+func upDateStudentInfo(receivedStudent, student schemas.Student) schemas.Student {
 	if receivedStudent.Name != "" { // se o campo Name do receivedStudent for diferente de vazio -> Name é uma string
 		student.Name = receivedStudent.Name //retorna Name do student.Name (atualizando o campo)
 	}
