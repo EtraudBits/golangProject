@@ -49,6 +49,14 @@ err := s.DB.Find(&students).Error//consultar essa tabela usando o metodo find do
 return students, err
 }
 
+//metodo para filtrar o campo active
+func (s *StudentHandler) GetFilteredStudent (active bool) ([]schemas.Student, error) { //função publica -> listar usuario , retornando a lista de usuarios (estudantes) + erro.
+filteredStudents := []schemas.Student{} // retorna uma lista de usuarios (estudantes)
+err := s.DB.Where("active = ?", active).Find(&filteredStudents)
+return filteredStudents, err.Error
+}
+
+
 func (s *StudentHandler) GetStudent (id int) (schemas.Student, error) { //função publica -> Busca um unico usuario , retornando um usuarios (estudante) + erro. buscando pelo o ID
 var student schemas.Student // variavel student do tipo Stundet (guarda um usuarios (estudante))
 err := s.DB.First(&student, id).Error//para este caso usamos o First para procurar apenas um dado, diferente do Find. (metodo do GORM) usando o parametro ID.

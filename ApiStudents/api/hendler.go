@@ -7,6 +7,7 @@ import (
 	"errors"
 
 	"github.com/EtraudBits/golangProject/ApiStudents/schemas" //pacote do repositório schemas
+
 	"github.com/labstack/echo/v4"
 	"github.com/rs/zerolog/log" //formatar os logs (deixar mais organizado)
 	"gorm.io/gorm"
@@ -19,6 +20,21 @@ func (api *API) getStudents(c echo.Context) error { //recebe um echo.context, qu
   if err != nil {
     return c.String(http.StatusNotFound, "Failed to get students") //podemos usar o StatusNotFound, caso não tenha nenhum usuario (estudante) cadastrarado ele mostra a msg.
   }
+
+  //queryparam (para filtrar por campo, neste caso pelo o campo active)
+  active := c.QueryParam("active")
+
+  if active != "" {
+      //transformar string em bool -> usando strconv.ParseBoll
+      act, err := strconv.ParseBool(active)
+        if err != nil {
+          log.Error().Err(err).Msg("[api] error to parse boolean")
+          return c.String(http.StatusInternalServerError, "Failed to parse boolean")
+        } 
+      //metodo para fazer a filtragem 
+    students, err = api.DB.GetFilteredStudent(act)
+  }
+
 
   //cria uma função para chamar a lista de estudande com a nova formatação criada no schemas.go
   listOfStudents := map[string] []schemas.StudentResponse{"students:": schemas.NewResponse(students)}
