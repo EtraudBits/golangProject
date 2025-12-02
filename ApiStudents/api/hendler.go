@@ -19,7 +19,11 @@ func (api *API) getStudents(c echo.Context) error { //recebe um echo.context, qu
   if err != nil {
     return c.String(http.StatusNotFound, "Failed to get students") //podemos usar o StatusNotFound, caso não tenha nenhum usuario (estudante) cadastrarado ele mostra a msg.
   }
-  return c.JSON(http.StatusOK, students) // retorna uma resposta HTTP com status 200 (ok) -> para aplicações mais robustas chama o c.JSON
+
+  //cria uma função para chamar a lista de estudande com a nova formatação criada no schemas.go
+  listOfStudents := map[string] []schemas.StudentResponse{"students:": schemas.NewResponse(students)}
+  
+  return c.JSON(http.StatusOK, listOfStudents) // retorna uma resposta HTTP com status 200 (ok) -> para aplicações mais robustas chama o c.JSON
 }
 
 func (api *API) createStudent(c echo.Context) error { //recebe um echo.context, que contém informações da requisição e métodos para responder. Função que recebe o POST
@@ -47,7 +51,7 @@ func (api *API) createStudent(c echo.Context) error { //recebe um echo.context, 
   if err := api.DB.AddStudent(student); err != nil {
      return c.String(http.StatusInternalServerError, "Error to Create student") // Caso ocorra o erro -> retorna uma resposta HTTP com erro interno do Servidor
   } //funçao publica na pacote db -> Chama a função student dinamica acima, tratando o erro, se houver!
-  return c.String(http.StatusOK, "Create student") // canso não ocorra erro -> retorna uma resposta HTTP com status 200 (ok)
+  return c.JSON(http.StatusOK, student) // canso não ocorra erro -> retorna uma resposta HTTP com status 200 (ok)
   
 }
 
