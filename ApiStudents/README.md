@@ -45,8 +45,6 @@ Request → Echo Router → Handler → Database Layer (GORM + SQLite)
                                 → Responses (schemas)
 ```
 
-![Arquitetura](https://i.imgur.com/O0oR2vR.png)
-
 ---
 
 ## 🚀 **Tecnologias Utilizadas**
@@ -287,8 +285,6 @@ Aplicações reais:
                                  Swagger Docs
 ```
 
-![Fluxo](https://i.imgur.com/UkB1cQX.png)
-
 ---
 
 # 📃 **Conclusão**
@@ -300,3 +296,5 @@ Este projeto demonstra domínio em:
 - Arquitetura limpa
 - Integração com banco usando GORM
 - Validação, logs e documentação Swagger
+
+[def]: https://i.imgur.com/UkB1cQX.png
