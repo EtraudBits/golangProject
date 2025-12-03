@@ -2,7 +2,9 @@
 
 ---
 
-![Go Logo](https://golang.org/lib/godoc/images/go-logo-blue.svg)
+<div style="display: inline_block"><br>
+  <img alt="Golang" width="48" src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/go/go-original.svg" />
+</div>
 
 ## 📌 **Descrição do Projeto**
 
@@ -298,5 +300,3 @@ Este projeto demonstra domínio em:
 - Arquitetura limpa
 - Integração com banco usando GORM
 - Validação, logs e documentação Swagger
-
-Simples, limpo, elegante e pronto para produção — perfeito para seu portfólio. ✔️🔥
