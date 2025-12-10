@@ -42,13 +42,11 @@ func Connect() error {
 	return nil
 }
 
-// migrate executa as migrações iniciais do banco de dados
-// aqui criamos as tabelas necessárias se elas não existirem
+// migrate executa SQL de criação de tabelas iniciais
+// inclui a tabela products (se ainda não existir) e a nova tabela stock_movements
 func migrate() error {
-	// Definição do shema SQL para a tabela products.
-	//id: PK autoincrement, name: texto, price e stock: Real (números com ponto),
-	//unit: unidade (m2, kg, un...), category: texto, created_at: timestamp.
-	schema := `
+	//schemaProducts para tabela products (matenmos compatibilidade com o que já usado)
+	schemaProducts := ` 
 	CREATE TABLE IF NOT EXISTS products (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name TEXT NOT NULL,
@@ -59,9 +57,26 @@ func migrate() error {
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP	
 	);
 	`
+	// Schema para a tebela stock_movements (nova tabela para histórico de movimentações de estoque)
+	// - product_id: referencia ao produto (não há FK forçada aqui para simplicidade)
+	// - tipo: "Entrada", "Saida", "ajuste"
+	// - quantidade: número (pode ser decimal)
+	// - created_at: timestamp automático
+	schemaStock := `
+	CREATE TABLE IF NOT EXISTS stock_movements (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		product_id INTEGER NOT NULL,
+		tipo TEXT NOT NULL,
+		quantidade REAL NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
+	`
 	// execução da query de criação da tabela no DB.
-	if _, err := DB.Exec(schema); err != nil {
+	if _, err := DB.Exec(schemaProducts); err != nil {
 		return fmt.Errorf("erro ao criar tabela products: %v", err)
+	}
+	if _, err := DB.Exec(schemaStock); err != nil {			
+		return fmt.Errorf("erro ao criar tabela stock_movements: %v", err)
 	}
 
 	// exemplo opcional: podemos inserir um registro inicial se quisermos (comentei).
