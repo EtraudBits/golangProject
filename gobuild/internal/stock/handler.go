@@ -42,7 +42,7 @@ func (h *Handler) Entrada(c echo.Context) error {
 	}
 	m := &Movement {
 		ProductID: req.ProductID,
-		Type: "ENTRADA",
+		Type: "Entrada",
 		Quantity: req.Quantity,
 	}
 	
@@ -63,7 +63,7 @@ func (h *Handler) Entrada(c echo.Context) error {
 	
 	m := &Movement{
 		ProductID: req.ProductID,
-		Type: "SAIDA",
+		Type: "Saida",
 		Quantity: req.Quantity,
 	}
 
@@ -83,7 +83,7 @@ func (h *Handler) Entrada(c echo.Context) error {
 
 	m := &Movement{
 		ProductID: req.ProductID,
-		Type: "AJUSTE",
+		Type: "Ajuste",
 		Quantity: req.Quantity,
 	}
 

@@ -60,19 +60,19 @@ func (s *Service) CreateMovement(ctx context.Context, m *Movement) (int64, error
 	}
 
 	// lê produto atual (via função injetada)
-	prod, err := s.getProduct(ctx, m.ProductID)	
+	currentStock, err := s.getProduct(ctx, m.ProductID)	
 	if err != nil {
 		return 0, fmt.Errorf("erro ao obter produto: %v", err)
 	}
 
 	// dependendo do tipo, calcula novo estoque
-	newStock := prod // começa com estoque atual
+	newStock := currentStock // começa com estoque atual
 	switch m.Type {
-	case "ENTRADA":
+	case "Entrada":
 		newStock += m.Quantity 
-	case "SAIDA":
+	case "Saida":
 		newStock -= m.Quantity
-	case "AJUSTE":
+	case "Ajuste":
 		// ajuste significa que o estoque passa a ser exatamente m.Quantity
 		newStock = m.Quantity	
 }
