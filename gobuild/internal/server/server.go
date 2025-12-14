@@ -1,66 +1,82 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 
-	"github.com/EtraudBits/golangProject/gobuild/internal/database" // conexão com o banco de dados (DB)
-	"github.com/EtraudBits/golangProject/gobuild/internal/handler"  // pacote antigo de handlers (db test)
-	"github.com/EtraudBits/golangProject/gobuild/internal/product"  // pacote product (novo)
+	"github.com/EtraudBits/golangProject/gobuild/internal/database"
+	dbhandler "github.com/EtraudBits/golangProject/gobuild/internal/handler" // handler de /db-test
+	"github.com/EtraudBits/golangProject/gobuild/internal/product"
+	stockpkg "github.com/EtraudBits/golangProject/gobuild/internal/stock"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
-// Server represtenta o servidor HTTP usando Echo framework
+// Server é o wrapper do Echo usado para organizar o app
 type Server struct {
-	Echo *echo.Echo // instância do Echo usada para gerenciar rotas e requisições
+	Echo *echo.Echo
 }
 
-// New cria uma nova instância do servidor
+// New cria o servidor com middlewares básicos
 func New() *Server {
 	e := echo.New()
-
-	//e.Use(middlleware.Logger())
-	//e.Use(middlleware.Recover())
-
-	return &Server{
-		Echo: e,
-	}
-
+	e.Use(middleware.Logger())
+	e.Use(middleware.Recover())
+	return &Server{Echo: e}
 }
-// RegisterRoutes registra todas as rotas da API
-// além das rotas existentes, registra as rotas de produto /api/products com o CRUD completo
-func (s *Server) RegisterRoutes() {
 
-	// Rota Raiz
+// RegisterRoutes registra todas as rotas da aplicação
+func (s *Server) RegisterRoutes() {
+	// rota raiz
 	s.Echo.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "API gobuild rodando com SQLite!")
+		return c.String(http.StatusOK, "API gobuild rodando com SQLite! 🚀")
 	})
 
-	// Rota de Testa a conexão do Banco de Dados
-	s.Echo.GET("/db-test", handler.TestDBHandler)
+	// rota de teste do banco
+	s.Echo.GET("/db-test", dbhandler.TestDBHandler)
 
+	// --- produtos (já existentes) ---
+	repo := product.NewRepository(database.DB)
+	svc := product.NewService(repo)
+	h := product.NewHandler(svc)
+	gp := s.Echo.Group("/api/products")
+	h.RegisterRoutes(gp)
 
-// --- Configuração do módulo de Produtos ---
-// cria repositório, serviço e handler para produtos usando a conexão do DB.
-// database.DB vem do pacote internal/database, previamente inicializado em main.go.
-repo := product.NewRepository(database.DB) // cria repositório com a conexão do DB
-svc := product.NewService(repo) // injeta repo no service
-h := product.NewHandler(svc) // cria o handler http para products
+	// --- estoque (novo módulo) ---
+	stockRepo := stockpkg.NewRepository(database.DB)
 
-//cria um grupo de rotas para organizar endpoints realcionados a produtos.
-// As rotas ficarão sob o prefixo /api/products
-g := s.Echo.Group("/api/products")
-//registra as rotas de produto no grupo criado
-h.RegisterRoutes(g)
+	// Função injetada para ler produto (ProductLite) — usa o produto repo/serviço já existente.
+	getProduct := func(ctx context.Context, id int) (float64, error) {
+		// reutilizamos repository product para buscar apenas stock (podia ser otimizada)
+		p, err := repo.GetByID(ctx, id)
+		if err != nil {
+			return 0, err
+		}
+		if p == nil {
+			return 0, nil
+		}
+		return p.Estoque, nil
+	}
+
+	// Função injetada para atualizar estoque do produto
+	updateStock := func(ctx context.Context, id int, newStock float64) error {
+		// Faz update direto na tabela products
+		_, err := database.DB.ExecContext(ctx, `UPDATE products SET stock = ? WHERE id = ?`, newStock, id)
+		return err
+	}
+
+	stockSvc := stockpkg.NewService(database.DB, stockRepo, getProduct, updateStock)
+	stockHandler := stockpkg.NewHandler(stockSvc)
+	gs := s.Echo.Group("/api/stock")
+	stockHandler.RegisterRoutes(gs)
 }
 
-// Start inicia o servidor HTTP na porta 8080
-// caso de erro, encerra o programa com log fatal
+// Start inicia o servidor
 func (s *Server) Start() {
-	fmt.Println("Iniciando o servidor na porta 8080...")
-
+	fmt.Println("🔥 Servidor iniciado em http://localhost:8080")
 	if err := s.Echo.Start(":8080"); err != nil {
-		log.Fatalf("Erro ao iniciar o servidor: %v", err)
+		log.Fatalf("Erro ao iniciar servidor: %v", err)
 	}
-}	
+}
