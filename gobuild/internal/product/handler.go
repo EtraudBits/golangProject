@@ -30,6 +30,8 @@ func (h *Handler) RegisterRoutes(g *echo.Group) {
 	g.PUT("/:id", h.Update)
 	// DELETE /api/products/:id -> deletar produto por ID
 	g.DELETE("/:id", h.Delete)
+	// Rota para consultar o estoque de um produto
+	g.GET("/:id/stock", h.GetStock)
 
 }
 // Create lida com a criação de um produto via JSON no corpo da requisição.
@@ -129,4 +131,31 @@ func (h *Handler) Delete(c echo.Context) error {
 	}
 	//retorna 204 No Content em caso de sucesso
 	return c.NoContent(http.StatusNoContent)
+}
+
+// GetStock retorna o estoque atual de um produto
+func (h *Handler) GetStock(c echo.Context) error {
+	// Lê o ID da URL
+	idStr := c.Param("id")
+
+	//Converte string em Int
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error" : "id inválido",
+		})
+	}
+	// Chama o Service para buscar o Estoque
+	stock, err := h.svc.GetStock(c.Request().Context(), id)
+	if err != nil {
+		// se o produto não existir, retorna 404
+		return c.JSON(http.StatusNotFound, map[string]string{
+			"error" : err.Error(),
+		})
+	}
+	// Retorna apenas o que o cliente precisa
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"product_id": id,
+		"estoque": stock,
+	})
 }

@@ -108,3 +108,18 @@ func (s *Service) Delete(ctx context.Context, id int) error {
 	//deleta o produto
 	return s.repo.Delete(ctx, id)
 }
+// --- Função para pesquisar o estoque de cada produto --
+// GetStock retorna apenas o estoque atual de um produto
+func (s *Service) GetStock(ctx context.Context, id int) (float64, error) {
+	// Busca o produto pelo ID usando o repositório
+	p, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return 0, nil
+	}
+	// Se o produto não existir, retorna erro
+	if p == nil {
+		return 0, errors.New("Produto não encontrado")
+	}
+	// Retorna apenas o estoque
+	return p.Estoque, nil
+}
