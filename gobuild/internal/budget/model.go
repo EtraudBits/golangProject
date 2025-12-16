@@ -13,7 +13,7 @@ type Budget struct {
 type BudgetItem struct {
 	ID int `json:"id"` // ID do item
 	BudgetID int `json:"budget_id"` // ID do orçamento (FK)
-	ProductID int `json:"poduct_id"` // ID do produto
+	ProductID int `json:"product_id"` // ID do produto
 	Product string `json:"product"` // nome do produto (para exibição)
 	Quantity float64 `json:"quantity"` //Quantidade
 	UnitPrice float64 `json:"unit_price"` // Preço Unitário
