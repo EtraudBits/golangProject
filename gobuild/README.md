@@ -186,7 +186,3 @@ Base: `http://localhost:8080`
 
 - Repo: `github.com/EtraudBits/golangProject`
 - Issues / PRs bem-vindos — veja o README principal para guidelines de contribuição.
-
----
-
-🔧 Se quiser, posso também adicionar um `Makefile` com meta `seed` e `test` para facilitar o fluxo. Quer que eu faça isso? (sim/não)
