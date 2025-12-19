@@ -4,6 +4,8 @@ import (
 	"context" // Para passar contexto em operações de banco de dados
 	"errors"  // para manipulação de erros
 	"fmt"     // para formatação de strings e erros
+
+	"github.com/EtraudBits/golangProject/gobuild/internal/budget"
 )
 
 type Service struct {
@@ -122,4 +124,23 @@ func (s *Service) GetStock(ctx context.Context, id int) (float64, error) {
 	}
 	// Retorna apenas o estoque
 	return p.Estoque, nil
+}
+
+// GetByID implementa a interface budget.ProductReader
+// Ele adapta o Produto completo para um ProductLite (usado pelo budget)
+func (s *Service) GetByID(ctx context.Context, id int) (*budget.ProductLite, error) {
+	// reutiza a logica que já existe
+	p, err := s.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if p == nil {
+		return nil, nil
+	}
+	//converte Produto -> ProductLite
+	return &budget.ProductLite{
+		ID: p.ID,
+		Name: p.Name,
+		Price: p.Preco,
+	}, nil
 }
