@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/EtraudBits/golangProject/gobuild/internal/budget"
 	"github.com/EtraudBits/golangProject/gobuild/internal/database"
 	dbhandler "github.com/EtraudBits/golangProject/gobuild/internal/handler" // handler de /db-test
 	"github.com/EtraudBits/golangProject/gobuild/internal/product"
@@ -44,6 +45,20 @@ func (s *Server) RegisterRoutes() {
 	gp := s.Echo.Group("/api/products")
 	h.RegisterRoutes(gp)
 
+	// -- Modulo budget
+	// cria o repositório de budget -> fala com o banco
+	budgetRepo := budget.NewRepository(database.DB)
+
+	//cria o service de budget
+	budgetSvc := budget.NewService(budgetRepo, svc)
+
+	// cria o handler HTTP do budget
+	budgetHandler := budget.NewHandler(budgetSvc)
+
+	// cria um grupo de Rotas /api/budgets
+	gb := s.Echo.Group("api/budgets")
+	budgetHandler.RegisterRoutes(gb)
+
 	// --- estoque (novo módulo) ---
 	stockRepo := stockpkg.NewRepository(database.DB)
 
@@ -71,6 +86,8 @@ func (s *Server) RegisterRoutes() {
 	stockHandler := stockpkg.NewHandler(stockSvc)
 	gs := s.Echo.Group("/api/stock")
 	stockHandler.RegisterRoutes(gs)
+
+
 }
 
 // Start inicia o servidor
