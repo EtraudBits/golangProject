@@ -275,23 +275,3 @@ Abaixo está um backlog inicial com prioridades, estimativas de esforço e respo
 > Como usar esse backlog: escolha uma tarefa de alta prioridade (R1-R3), crie uma issue com referência ao ID (ex.: `R1`), atribua e siga o fluxo de contribuição descrito em **Desenvolvimento e contribuição**.
 
 ---
-
----
-
-## 9) Como manter o README atualizado (processo)
-
-- Ao adicionar feature/endpoint:
-  - Atualize a seção correspondente (ex.: “Como executar”, “Documentação da API”).
-  - Adicione exemplos de request/responses.
-  - Adicione entradas no Roadmap/Tarefas quando requerido.
-- Sugestão: adicione uma linha no changelog do README com data e pequena descrição da mudança.
-
----
-
-**Licença:** (adicionar se desejar)
-
-**Contato:** (adicione seu e-mail ou link do GitHub se quiser)
-
----
-
-🔧 Se quiser, eu já abro um PR com essa alteração e acrescento badges (ex.: Go, CI) — diga se prefere isso.
