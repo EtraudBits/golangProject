@@ -75,3 +75,78 @@ if err := tx.Commit(); err != nil {
 //retorno final
 return budgetID, nil
 }
+
+// ListBudgets retorna todos os orçamentos com seus itens
+func (r *Repository) ListBudgets(ctx context.Context) ([]Budget, error) {
+
+	// 1-> Busca todos os orçamentos (cabeçalho)
+
+	rows, err := r.DB.QueryContext(ctx,
+	`SELECT id, customer, total, created_at
+	FROM budgets
+	ORDER BY created_at DESC`,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("erro ao lista orçamentos: %w", err)}
+		defer rows.Close()
+		
+		var budgets []Budget
+
+		//2-> Itera sobre os orçamentos
+		for rows.Next() {
+			var b Budget
+
+			// Lê os dados do orçamento
+			if err := rows.Scan(&b.ID, &b.Customer, &b.Total, &b.CreatedAt); err != nil {
+				return nil, fmt.Errorf("erro ao ler orçamento: %w, err")
+			}
+
+			// 3-> Buca os itens deste orçamento
+			items, err := r.getItemsByBudget(ctx, b.ID)
+			if err != nil {
+				return nil, err
+			}
+
+			b.Items = items
+			budgets = append(budgets, b)
+		}
+
+		if err := rows.Err(); err != nil {
+			return nil, err
+		}
+		return budgets, nil
+	}
+	
+	// getItemsBybudget busca os itens de um orçamento específico
+	func (r *Repository) getItemsByBudget(ctx context.Context, budgetID int64) ([]BudgetItem, error) {
+
+		rows, err := r.DB.QueryContext(ctx,
+		`SELECT product_id, product, quantity, unit_price, subtotal
+		FROM budget_items
+		WHERE budget_id = ?`,
+		budgetID,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("erro ao buscar intens do orçamento: %w", err)
+		}
+		defer rows.Close()
+
+		var items []BudgetItem
+
+		for rows.Next() {
+			var it BudgetItem
+
+			if err := rows.Scan(
+				&it.ProductID,
+				&it.Product,
+				&it.Quantity,
+				&it.UnitPrice,
+				&it.Subtotal,
+			); err != nil {
+				return nil, fmt.Errorf("erro ao ler item do orçamento: %w", err)
+			}
+
+			items = append(items, it)
+		}
+		return items, nil
+	}
