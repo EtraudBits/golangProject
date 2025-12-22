@@ -84,11 +84,22 @@ func (s *Service) Create(ctx context.Context, customer string, items []CreateIte
 	return budget, nil
 }
 	
+// List retorna todos os orçamentos com seus itens
+func (s *Service) List(ctx context.Context) ([]Budget, error) {
+	
+	// delega a busca pra o repository
+	budgets, err := s.repo.ListBudgets(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-//DTO (request auxiliar)
-// CreateItemRequest representa um item recebido via API
-type CreateItemRequest struct {
-	ProductID int `json:"product_id"`
-	Quantity float64 `json:"quantity"`
-}
+	// regras futuras podem ser aplicadas aqui
+	// - filtros
+	// - paginação
+	// - permissões
+
+	// retorno final	
+	return budgets, nil
+	}
+
 
