@@ -102,4 +102,15 @@ func (s *Service) List(ctx context.Context) ([]Budget, error) {
 	return budgets, nil
 	}
 
+	// GetByID retorna um orçamento pelo ID
+	func (s *Service) GetByID(ctx context.Context, id int64) (*Budget, error) {
 
+		budget, err := s.repo.GetByID(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		if budget == nil {
+			return nil, errors.New("orçamento não encontrado")
+		}
+		return budget, nil
+	}

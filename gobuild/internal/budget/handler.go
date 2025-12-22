@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+
+	"strconv"
 )
 
 type Handler struct {
@@ -19,6 +21,7 @@ func NewHandler(svc *Service) *Handler {
 func (h *Handler) RegisterRoutes (g *echo.Group) {
 	g.POST("", h.Create)
 	g.GET("", h.List)
+	g.GET("/:id", h.GetByID)
 }
 
 // CreateItemRequest represeta um item enviado pelo o cliente
@@ -62,4 +65,24 @@ func (h *Handler) List(c echo.Context) error {
 		})
 	}
 	return c.JSON(http.StatusOK, budgets)
+}
+
+// GetByID retorna um orçamento especifico
+func (h *Handler) GetByID(c echo.Context) error {
+
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "id inválido",
+		})
+	}
+
+	budget, err := h.svc.GetByID(c.Request().Context(), id)
+	if err != nil {
+		return c.JSON(http.StatusNotFound, map[string]string{
+			"error": err.Error(),
+		})
+	}
+	return c.JSON(http.StatusOK, budget)
 }

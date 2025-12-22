@@ -150,3 +150,53 @@ func (r *Repository) ListBudgets(ctx context.Context) ([]Budget, error) {
 		}
 		return items, nil
 	}
+
+	// GetByID busca um orçamento pelo ID junto com seus itens
+	func (r *Repository) GetByID(ctx context.Context, id int64) (*Budget, error) {
+
+		// 1-> Busca o orçamento (cabeçalho)
+		row := r.DB.QueryRowContext(ctx,
+		`SELECT id, customer, total, created_at
+		FROM budgets
+		WHERE id = ?`,
+		id,
+		)
+
+		var b Budget
+		if err := row.Scan(&b.ID, &b.Customer, &b.Total, &b.CreatedAt); err != nil {
+			if err == sql.ErrNoRows {
+				return nil, nil // Orçamento não encontrado
+			}
+			return nil, err
+		}
+
+		// 2-> Busca os itens do orçamento
+		rows, err := r.DB.QueryContext(ctx,
+		`SELECT id, budget_id, product_id, product, quantity, unit_price, subtotal
+		FROM budget_items
+		WHERE budget_id = ?`, 
+		b.ID,
+		)
+		
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var item BudgetItem
+			if err := rows.Scan(
+				&item.ID,
+				&item.BudgetID,
+				&item.ProductID,
+				&item.Product,
+				&item.Quantity,
+				&item.UnitPrice,
+				&item.Subtotal,
+			); err != nil {
+				return nil, err
+			}
+			b.Items = append(b.Items, item)
+		}
+		return &b, nil
+	}

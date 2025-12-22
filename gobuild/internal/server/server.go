@@ -56,7 +56,7 @@ func (s *Server) RegisterRoutes() {
 	budgetHandler := budget.NewHandler(budgetSvc)
 
 	// cria um grupo de Rotas /api/budgets
-	gb := s.Echo.Group("api/budgets")
+	gb := s.Echo.Group("/api/budgets")
 	budgetHandler.RegisterRoutes(gb)
 
 	// --- estoque (novo módulo) ---
