@@ -12,6 +12,11 @@ type ProductReader interface {
 	GetByID(ctx context.Context, id int) (*ProductLite, error) // o budget só quer: ID, Nome e Preço -> então usaremos o ProductLite (struct)
 }
 
+// StockService define o que o budget precisa saber sobre estoque
+type StockService interface { // interface para checar estoque -> para o budget não depender diretamente do módulo de estoque
+	// saida reduz o estoque de um produto
+	Saida(ctx context.Context, productID int, quantity float64) error}
+
 type ProductLite struct {
 	ID int
 	Name string
@@ -23,13 +28,15 @@ type ProductLite struct {
 type Service struct {
 	repo *Repository //fala com o banco (budget_repository)
 	product ProductReader //lê produtos (via interface)
+	stock StockService // checa estoque (via interface)
 }
 
 // Construtor do Service (falicita testes e facilita manutenção) -> injeção de dependência
-func NewService (repo *Repository, product ProductReader) *Service {
+func NewService (repo *Repository, product ProductReader, stock StockService,) *Service {
 	return &Service{
 		repo: repo,
 		product: product,
+		stock: stock,
 	}
 }
 
@@ -79,8 +86,16 @@ func (s *Service) Create(ctx context.Context, customer string, items []CreateIte
 	if err != nil {
 		return nil, err
 	}
+	
+	// Dar saída no estoque para cada item do orçamento
+	for _, item := range budgetItems {
+		err := s.stock.Saida(ctx, item.ProductID, item.Quantity)
+		if err != nil {
+			return nil, err
+		}
+	}
+	
 	budget.ID = int64(id)
-
 	return budget, nil
 }
 	
