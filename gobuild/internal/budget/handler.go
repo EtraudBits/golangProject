@@ -22,6 +22,7 @@ func (h *Handler) RegisterRoutes (g *echo.Group) {
 	g.POST("", h.Create)
 	g.GET("", h.List)
 	g.GET("/:id", h.GetByID)
+	g.PUT("/:id/cancel", h.Cancel)
 }
 
 // CreateItemRequest represeta um item enviado pelo o cliente
@@ -85,4 +86,22 @@ func (h *Handler) GetByID(c echo.Context) error {
 		})
 	}
 	return c.JSON(http.StatusOK, budget)
+}
+
+// Cancel cancela um orçamento
+func (h *Handler) Cancel (c echo.Context) error {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string {
+			"error": "id inválido",
+		})
+	}
+	if err := h.svc.Cancel(c.Request().Context(), id); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string {
+			"error": err.Error(),
+		})
+	}
+	return c.JSON(http.StatusOK, map[string]string {
+		"message": "orçamento cancelado com sucesso",
+	})
 }
