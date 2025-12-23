@@ -129,3 +129,27 @@ func (s *Service) List(ctx context.Context) ([]Budget, error) {
 		}
 		return budget, nil
 	}
+
+	// cria metodo cancelar orçamento
+	func (s *Service) Cancel(ctx context.Context, id int64) error {
+		// buscar item do orçamento
+		items, err := s.repo.GetItems(ctx, id)
+		if err != nil {
+			return err		
+		}
+
+		if len(items) == 0 {
+			return errors.New("orçamento não encontrado ou sem itens")
+		}
+
+		// Devolve o estoque para cada item
+		for _, item := range items {
+			err := s.stock.Entrada(ctx, item.ProductID, item.Quantity) //metodo entrada no stock/service.go
+			if err != nil {
+				return err
+			}
+		}
+
+		// Atualiza o status do orçamento para "Cancelado"
+		return s.repo.Cancel(ctx, id)
+	}
