@@ -114,4 +114,17 @@ func (s *Service) GetHistory(ctx context.Context, productID int) ([]Movement, er
 	return s.repo.GetByProduct(ctx, productID)
 }
 
+// Saida reduz o estoque de um produto
+func (s *Service) Saida(ctx context.Context, productID int, quantity float64) error {
+	// cria movimento de saída
+	m := &Movement{
+		ProductID: productID,
+		Type: "Saida",
+		Quantity: quantity,
+	}
+	_, err := s.CreateMovement(ctx, m)
+	return err
+}
+
+
 
