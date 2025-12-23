@@ -71,12 +71,27 @@ func migrate() error {
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 	`
+
+	// schema budget com status (adicionado campo status)
+	schemaBudget := `
+	CREATE TABLE IF NOT EXISTS budgets (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		customer TEXT NOT NULL,
+		total REAL NOT NULL,
+		status TEXT NOT NULL DEFAULT 'ATIVO',
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
+	`
+
 	// execução da query de criação da tabela no DB.
 	if _, err := DB.Exec(schemaProducts); err != nil {
 		return fmt.Errorf("erro ao criar tabela products: %v", err)
 	}
 	if _, err := DB.Exec(schemaStock); err != nil {			
 		return fmt.Errorf("erro ao criar tabela stock_movements: %v", err)
+	}
+	if _, err := DB.Exec(schemaBudget); err != nil {			
+		return fmt.Errorf("erro ao criar tabela budgets: %v", err)
 	}
 
 	// exemplo opcional: podemos inserir um registro inicial se quisermos (comentei).
