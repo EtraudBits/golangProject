@@ -126,5 +126,16 @@ func (s *Service) Saida(ctx context.Context, productID int, quantity float64) er
 	return err
 }
 
+func (s *Service) Entrada(ctx context.Context, productID int, quantity float64) error {
+	// cria movimento de entrada
+	m := &Movement{
+		ProductID: productID,
+		Type: "Entrada",
+		Quantity: quantity,
+	}
+	_, err := s.CreateMovement(ctx, m)
+	return err
+	}
+
 
 
