@@ -6,6 +6,7 @@ type Budget struct {
 	ID int64 `json:"id"` //ID do Orçamento
 	Customer string `json:"customer"` // Nome do cliente
 	Total float64 `json:"total"` // Valor total do orçamento -> será calculado no service, não no handler
+	Status string `json:"status"` // status do orçamento
 	CreatedAt string `json:"created_at"` // Data de criação
 	Items []BudgetItem `json:"items"` // itens do orçamento
 }
