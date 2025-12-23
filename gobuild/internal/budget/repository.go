@@ -200,3 +200,32 @@ func (r *Repository) ListBudgets(ctx context.Context) ([]Budget, error) {
 		}
 		return &b, nil
 	}
+	// GetItems busca os itens de um orçamento específico
+	func (r *Repository) GetItems(ctx context.Context, budgetID int64) ([]BudgetItem, error) {
+		rows, err := r.DB.QueryContext (ctx,
+		`SELECT product_id, quantity, FROM budget_items WHERE budget_id = ?`,
+		budgetID,
+		)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		var items []BudgetItem
+		for rows.Next() {
+			var it BudgetItem
+			if err := rows.Scan(&it.ProductID, &it.Quantity); err != nil {
+				return nil, err
+			}
+			items = append(items, it)
+		}
+		return items, nil
+	}
+
+	func (r *Repository) Cancel(ctx context.Context, id int64) error {
+		_, err := r.DB.ExecContext(ctx,
+		`UPDATE budgets SET status = 'CANCELADO' WHERE id = ?`,
+		id,
+	)
+	return err
+}
