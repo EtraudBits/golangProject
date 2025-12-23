@@ -14,8 +14,11 @@ type ProductReader interface {
 
 // StockService define o que o budget precisa saber sobre estoque
 type StockService interface { // interface para checar estoque -> para o budget não depender diretamente do módulo de estoque
-	// saida reduz o estoque de um produto
-	Saida(ctx context.Context, productID int, quantity float64) error}
+	// Saida reduz o estoque de um produto
+	Saida(ctx context.Context, productID int, quantity float64) error
+	// Entrada aumenta o estoque de um produto
+	Entrada(ctx context.Context, productID int, quantity float64) error
+}
 
 type ProductLite struct {
 	ID int
