@@ -45,21 +45,7 @@ func (s *Server) RegisterRoutes() {
 	gp := s.Echo.Group("/api/products")
 	h.RegisterRoutes(gp)
 
-	// -- Modulo budget
-	// cria o repositório de budget -> fala com o banco
-	budgetRepo := budget.NewRepository(database.DB)
-
-	//cria o service de budget
-	budgetSvc := budget.NewService(budgetRepo, svc)
-
-	// cria o handler HTTP do budget
-	budgetHandler := budget.NewHandler(budgetSvc)
-
-	// cria um grupo de Rotas /api/budgets
-	gb := s.Echo.Group("/api/budgets")
-	budgetHandler.RegisterRoutes(gb)
-
-	// --- estoque (novo módulo) ---
+	// --- estoque (criado antes do budget para injeção de dependência) ---
 	stockRepo := stockpkg.NewRepository(database.DB)
 
 	// Função injetada para ler produto (ProductLite) — usa o produto repo/serviço já existente.
@@ -86,6 +72,20 @@ func (s *Server) RegisterRoutes() {
 	stockHandler := stockpkg.NewHandler(stockSvc)
 	gs := s.Echo.Group("/api/stock")
 	stockHandler.RegisterRoutes(gs)
+
+	// -- Modulo budget (depois do stock, pois depende dele)
+	// cria o repositório de budget -> fala com o banco
+	budgetRepo := budget.NewRepository(database.DB)
+
+	//cria o service de budget (injetando stockSvc)
+	budgetSvc := budget.NewService(budgetRepo, svc, stockSvc)
+
+	// cria o handler HTTP do budget
+	budgetHandler := budget.NewHandler(budgetSvc)
+
+	// cria um grupo de Rotas /api/budgets
+	gb := s.Echo.Group("/api/budgets")
+	budgetHandler.RegisterRoutes(gb)
 
 
 }
