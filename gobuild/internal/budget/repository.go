@@ -118,9 +118,10 @@ func (r *Repository) ListBudgets(ctx context.Context) ([]Budget, error) {
 	func (r *Repository) getItemsByBudget(ctx context.Context, budgetID int64) ([]BudgetItem, error) {
 
 		rows, err := r.DB.QueryContext(ctx,
-		`SELECT product_id, product, quantity, unit_price, subtotal
+		`SELECT id, budget_id, product_id, product, quantity, unit_price, subtotal
 		FROM budget_items
-		WHERE budget_id = ?`,
+		WHERE budget_id = ? 
+		ORDER BY id`,
 		budgetID,
 		)
 		if err != nil {
@@ -134,6 +135,8 @@ func (r *Repository) ListBudgets(ctx context.Context) ([]Budget, error) {
 			var it BudgetItem
 
 			if err := rows.Scan(
+				&it.ID,
+				&it.BudgetID,
 				&it.ProductID,
 				&it.Product,
 				&it.Quantity,
@@ -144,6 +147,9 @@ func (r *Repository) ListBudgets(ctx context.Context) ([]Budget, error) {
 			}
 
 			items = append(items, it)
+		}
+		if err := rows.Err(); err != nil {
+			return nil, fmt.Errorf("erro na iteração dos itens do orçamento: %w", err)
 		}
 		return items, nil
 	}
