@@ -96,21 +96,18 @@ func (r *Repository) ListBudgets(ctx context.Context) ([]Budget, error) {
 		for rows.Next() {
 			var b Budget
 
-			// Lê os dados do orçamento
-			if err := rows.Scan(&b.ID, &b.Customer, &b.Total, &b.CreatedAt); err != nil {
-				return nil, fmt.Errorf("erro ao ler orçamento: %w, err")
+			//Mapeia colunas -> struct
+			if err := rows.Scan(
+				&b.ID,
+				&b.Customer,
+				&b.Total,
+				&b.CreatedAt,
+			); err != nil {
+				return nil, fmt.Errorf("erro ao ler orçamento: %w", err)	
 			}
-
-			// 3-> Buca os itens deste orçamento
-			items, err := r.getItemsByBudget(ctx, b.ID)
-			if err != nil {
-				return nil, err
-			}
-
-			b.Items = items
 			budgets = append(budgets, b)
 		}
-
+		// Verifica erros na iteração
 		if err := rows.Err(); err != nil {
 			return nil, err
 		}
