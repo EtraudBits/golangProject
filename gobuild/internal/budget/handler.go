@@ -71,21 +71,30 @@ func (h *Handler) List(c echo.Context) error {
 // GetByID retorna um orçamento especifico
 func (h *Handler) GetByID(c echo.Context) error {
 
+	// 1 -> ler ID da URL
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{
+		return c.JSON(http.StatusBadRequest, map[string]string{ // trata o erro com status 400
 			"error": "id inválido",
 		})
 	}
 
+	// 2 -> chamar service
 	budget, err := h.svc.GetByID(c.Request().Context(), id)
 	if err != nil {
-		return c.JSON(http.StatusNotFound, map[string]string{
+		if err.Error() == "orçamento não encontrado" {
+		return c.JSON(http.StatusNotFound, map[string]string{ // trata o erro com status 404
 			"error": err.Error(),
 		})
 	}
-	return c.JSON(http.StatusOK, budget)
+		return c.JSON(http.StatusInternalServerError, map[string]string{ // trata o erro com status 500
+			"error": err.Error(),
+		})
+		
+	}
+	// 3 -> retornar resposta
+	return c.JSON(http.StatusOK, budget) // trata o sucesso com status 200
 }
 
 // Cancel cancela um orçamento
