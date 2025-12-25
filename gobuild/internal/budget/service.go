@@ -169,3 +169,64 @@ func (s *Service) List(ctx context.Context) ([]Budget, error) {
 		// Atualiza o status do orçamento para "Cancelado"
 		return s.repo.Cancel(ctx, id)
 	}
+
+	// Update atualiza um orçamento existente
+	func (s *Service) Update(
+		ctx context.Context,
+		budgetID int64,
+		customer string,
+		items []CreateItemRequest,
+	) (*Budget, error) {
+
+		// 1 -> Validar dados (semelhante ao Create)
+
+		if customer == "" {
+			return nil, errors.New("cliente é obrigatório!")
+		}
+
+		if len(items) == 0 {
+			return nil, errors.New("orçamento precisa de ao menos um item")
+		}
+
+		budget := &Budget{
+			ID: budgetID,
+			Customer: customer,
+			Total: 0, //total começa zerado.
+		}
+
+		//processar itens
+		var budgetItems []BudgetItem // lista de itens finais
+
+		for _, item := range items {
+			p, err := s.product.GetByID(ctx, item.ProductID)
+			if err != nil {
+				return nil, err
+			}
+			if p == nil {
+				return nil, errors.New("produto não encontrado")
+			}
+			//calcula o subtotal
+			subtotal := item.Quantity * p.Price
+
+			//criação item do orçamento
+			budgetItems = append(budgetItems, BudgetItem {
+				ProductID: p.ID,
+				Product: p.Name,
+				Quantity: item.Quantity,
+				UnitPrice: p.Price,
+				Subtotal: subtotal,
+			})
+			//somar total
+			budget.Total += subtotal
+		}
+
+		// persistencia no banco via repository
+		err := s.repo.UpdateBudget(ctx, budget, budgetItems)
+		if err != nil {
+			return nil, err
+		}
+		
+		// associar os itens ao budget antes de retornar
+		budget.Items = budgetItems
+		return budget, nil
+	}
