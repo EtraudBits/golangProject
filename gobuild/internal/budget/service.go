@@ -101,6 +101,32 @@ func (s *Service) Create(ctx context.Context, customer string, items []CreateIte
 	budget.ID = int64(id)
 	return budget, nil
 }
+
+// GetByID retorna um orçamento completo (cabeçalho + itens)
+func (s *Service) GetByID(ctx context.Context, id int64) (*Budget, error) {
+	// 1 -> Buscar o orçamento (cabeçalho)
+	budget, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if budget == nil {
+		return nil, errors.New("orçamento não encontrado")
+	}
+
+	// 2 -> Buscar os itens do orçamento
+	items, err := s.repo.ListItemsByBudget(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3 -> Associar os itens ao orçamento
+	budget.Items = items
+
+	// 4 -> Retornar orçamento completo
+	return budget, nil
+}
+
 	
 // List retorna todos os orçamentos com seus itens
 func (s *Service) List(ctx context.Context) ([]Budget, error) {
@@ -120,23 +146,10 @@ func (s *Service) List(ctx context.Context) ([]Budget, error) {
 	return budgets, nil
 	}
 
-	// GetByID retorna um orçamento pelo ID
-	func (s *Service) GetByID(ctx context.Context, id int64) (*Budget, error) {
-
-		budget, err := s.repo.GetByID(ctx, id)
-		if err != nil {
-			return nil, err
-		}
-		if budget == nil {
-			return nil, errors.New("orçamento não encontrado")
-		}
-		return budget, nil
-	}
-
 	// cria metodo cancelar orçamento
 	func (s *Service) Cancel(ctx context.Context, id int64) error {
 		// buscar item do orçamento
-		items, err := s.repo.GetItems(ctx, id)
+		items, err := s.repo.ListItemsByBudget(ctx, id)
 		if err != nil {
 			return err		
 		}
