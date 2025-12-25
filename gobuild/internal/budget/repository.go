@@ -113,48 +113,53 @@ func (r *Repository) ListBudgets(ctx context.Context) ([]Budget, error) {
 		}
 		return budgets, nil
 	}
-	
-	// getItemsBybudget busca os itens de um orçamento específico
-	func (r *Repository) getItemsByBudget(ctx context.Context, budgetID int64) ([]BudgetItem, error) {
 
-		rows, err := r.DB.QueryContext(ctx,
+	// ListItemsByBudget retorna os itens de um orçamento específico
+func (r *Repository) ListItemsByBudget(
+	ctx context.Context,
+	budgetID int64,
+) ([]BudgetItem, error) {
+
+	rows, err := r.DB.QueryContext(ctx,
 		`SELECT id, budget_id, product_id, product, quantity, unit_price, subtotal
-		FROM budget_items
-		WHERE budget_id = ? 
-		ORDER BY id`,
+		 FROM budget_items
+		 WHERE budget_id = ?
+		 ORDER BY id`,
 		budgetID,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("erro ao buscar intens do orçamento: %w", err)
+	)
+	if err != nil {
+		return nil, fmt.Errorf("erro ao listar itens do orçamento: %w", err)
+	}
+	defer rows.Close()
+
+	var items []BudgetItem
+
+	for rows.Next() {
+		var it BudgetItem
+
+		if err := rows.Scan(
+			&it.ID,
+			&it.BudgetID,
+			&it.ProductID,
+			&it.Product,
+			&it.Quantity,
+			&it.UnitPrice,
+			&it.Subtotal,
+		); err != nil {
+			return nil, fmt.Errorf("erro ao escanear item do orçamento: %w", err)
 		}
-		defer rows.Close()
 
-		var items []BudgetItem
-
-		for rows.Next() {
-			var it BudgetItem
-
-			if err := rows.Scan(
-				&it.ID,
-				&it.BudgetID,
-				&it.ProductID,
-				&it.Product,
-				&it.Quantity,
-				&it.UnitPrice,
-				&it.Subtotal,
-			); err != nil {
-				return nil, fmt.Errorf("erro ao ler item do orçamento: %w", err)
-			}
-
-			items = append(items, it)
-		}
-		if err := rows.Err(); err != nil {
-			return nil, fmt.Errorf("erro na iteração dos itens do orçamento: %w", err)
-		}
-		return items, nil
+		items = append(items, it)
 	}
 
-	// GetByID busca um orçamento pelo ID junto com seus itens
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("erro na iteração dos itens do orçamento: %w", err)
+	}
+
+	return items, nil
+}
+
+// GetByID busca um orçamento pelo ID junto com seus itens
 	func (r *Repository) GetByID(ctx context.Context, id int64) (*Budget, error) {
 
 		// 1-> Busca o orçamento (cabeçalho)
@@ -203,27 +208,6 @@ func (r *Repository) ListBudgets(ctx context.Context) ([]Budget, error) {
 		}
 		return &b, nil
 	}
-	// GetItems busca os itens de um orçamento específico
-	func (r *Repository) GetItems(ctx context.Context, budgetID int64) ([]BudgetItem, error) {
-		rows, err := r.DB.QueryContext (ctx,
-		`SELECT product_id, quantity, FROM budget_items WHERE budget_id = ?`,
-		budgetID,
-		)
-		if err != nil {
-			return nil, err
-		}
-		defer rows.Close()
-
-		var items []BudgetItem
-		for rows.Next() {
-			var it BudgetItem
-			if err := rows.Scan(&it.ProductID, &it.Quantity); err != nil {
-				return nil, err
-			}
-			items = append(items, it)
-		}
-		return items, nil
-	}
 
 	func (r *Repository) Cancel(ctx context.Context, id int64) error {
 		_, err := r.DB.ExecContext(ctx,
@@ -231,4 +215,61 @@ func (r *Repository) ListBudgets(ctx context.Context) ([]Budget, error) {
 		id,
 	)
 	return err
+}
+
+// UpdateBudget atualiza um orçamento e seus itens dentro de uma transação
+func (r *Repository) UpdateBudget(
+	ctx context.Context,
+	budget *Budget,
+	items []BudgetItem,
+) error {
+
+	// 1-> Inicia a transação
+	tx, err := r.DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	// 2-> Atualiza o cabeçalho do orçamento
+	_, err = tx.ExecContext(ctx,
+		`UPDATE budgets SET customer = ?, total = ? WHERE id = ?`,
+		budget.Customer,
+		budget.Total,
+		budget.ID,
+	)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// 3-> Remove os itens antigos
+	_, err = tx.ExecContext(ctx,
+		`DELETE FROM budget_items WHERE budget_id = ?`,
+		budget.ID,
+	)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// 4-> Insere os novos itens
+	for _, item := range items {
+		_, err := tx.ExecContext(ctx,
+			`INSERT INTO budget_items (budget_id, product_id, product, quantity, unit_price, subtotal)
+			 VALUES (?, ?, ?, ?, ?, ?)`,
+			budget.ID,
+			item.ProductID,
+			item.Product,
+			item.Quantity,
+			item.UnitPrice,
+			item.Subtotal,
+		)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	// 5-> Commit da transação
+	return tx.Commit()
 }
