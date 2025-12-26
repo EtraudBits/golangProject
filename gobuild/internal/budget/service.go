@@ -2,7 +2,10 @@ package budget
 
 import (
 	"context" // padrão GO para requests, banco, cancelamento
-	"errors"  // criar erros claros de negócio
+	"database/sql"
+
+	// para verificar sql.ErrNoRows
+	"errors" // criar erros claros de negócio
 )
 
 //cria uma interface que não depende diretamente do modulo product
@@ -230,3 +233,15 @@ func (s *Service) List(ctx context.Context) ([]Budget, error) {
 		budget.Items = budgetItems
 		return budget, nil
 	}
+// Delete remove um orçamento e seus itens
+func (s *Service) Delete(ctx context.Context, id int64) error {
+	// Chamar o repository para deletar
+	err := s.repo.DeleteBudget(ctx, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return errors.New("orçamento não encontrado")
+		}
+		return err
+	}
+	return nil
+}

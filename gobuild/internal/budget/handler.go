@@ -18,27 +18,31 @@ func NewHandler(svc *Service) *Handler {
 	}
 }
 
-func (h *Handler) RegisterRoutes (g *echo.Group) {
+func (h *Handler) RegisterRoutes(g *echo.Group) {
 	g.POST("", h.Create)
 	g.GET("", h.List)
 	g.GET("/:id", h.GetByID)
 	g.PUT("/:id/cancel", h.Cancel)
 	g.PUT("/:id", h.Update)
+	g.DELETE("/:id", h.Delete)
 }
 
-// CreateItemRequest represeta um item enviado pelo o cliente
+// CreateItemRequest representa um item enviado pelo cliente
 type CreateItemRequest struct {
-	ProductID int `json:"product_ID"`
-	Quantity float64 `json:"quantity"`
-}
-type CreateBudgetRequest struct {
-	Customer string `json:"customer"`
-	Items []CreateItemRequest `json:"items"`
+	ProductID int     `json:"product_ID"`
+	Quantity  float64 `json:"quantity"`
 }
 
-type updateBudgetRequest struct {
-	Customer string `json:"customer"`
-	Items []CreateItemRequest `json:"items"`
+// CreateBudgetRequest representa os dados para criar um orçamento
+type CreateBudgetRequest struct {
+	Customer string              `json:"customer"`
+	Items    []CreateItemRequest `json:"items"`
+}
+
+// UpdateBudgetRequest representa os dados para atualizar um orçamento
+type UpdateBudgetRequest struct {
+	Customer string              `json:"customer"`
+	Items    []CreateItemRequest `json:"items"`
 }
 
 func (h *Handler) Create(c echo.Context) error {
@@ -68,7 +72,7 @@ func (h *Handler) List(c echo.Context) error {
 	budgets, err := h.svc.List(c.Request().Context())
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{
-			"error" : err.Error(),
+			"error": err.Error(),
 		})
 	}
 	return c.JSON(http.StatusOK, budgets)
@@ -90,43 +94,48 @@ func (h *Handler) GetByID(c echo.Context) error {
 	budget, err := h.svc.GetByID(c.Request().Context(), id)
 	if err != nil {
 		if err.Error() == "orçamento não encontrado" {
-		return c.JSON(http.StatusNotFound, map[string]string{ // trata o erro com status 404
-			"error": err.Error(),
-		})
-	}
+			return c.JSON(http.StatusNotFound, map[string]string{ // trata o erro com status 404
+				"error": err.Error(),
+			})
+		}
 		return c.JSON(http.StatusInternalServerError, map[string]string{ // trata o erro com status 500
 			"error": err.Error(),
 		})
-		
+
 	}
 	// 3 -> retornar resposta
 	return c.JSON(http.StatusOK, budget) // trata o sucesso com status 200
 }
 
 // Cancel cancela um orçamento
-func (h *Handler) Cancel (c echo.Context) error {
+func (h *Handler) Cancel(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string {
+		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "id inválido",
 		})
 	}
-	if err := h.svc.Cancel(c.Request().Context(), id); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string {
+	err = h.svc.Cancel(c.Request().Context(), id)
+	if err != nil {
+		if err.Error() == "orçamento não encontrado ou sem itens" {
+			return c.JSON(http.StatusNotFound, map[string]string{
+				"error": err.Error(),
+			})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{
 			"error": err.Error(),
 		})
 	}
-	return c.JSON(http.StatusOK, map[string]string {
+	return c.JSON(http.StatusOK, map[string]string{
 		"message": "orçamento cancelado com sucesso",
 	})
 }
 
-// Updata atualiza um orçamento existente
+// Update atualiza um orçamento existente
 func (h *Handler) Update(c echo.Context) error {
 
 	// 1 -> ler ID da URL
-	idStr := c.Param("id")
-	id, err := strconv.ParseInt(idStr, 10, 64)
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "id inválido",
@@ -134,7 +143,7 @@ func (h *Handler) Update(c echo.Context) error {
 	}
 
 	// 2 -> ler o corpo da requisição
-	var req updateBudgetRequest
+	var req UpdateBudgetRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": "JSON inválido",
@@ -149,6 +158,11 @@ func (h *Handler) Update(c echo.Context) error {
 		req.Items,
 	)
 	if err != nil {
+		if err.Error() == "orçamento não encontrado" || err.Error() == "produto não encontrado" {
+			return c.JSON(http.StatusNotFound, map[string]string{
+				"error": err.Error(),
+			})
+		}
 		return c.JSON(http.StatusBadRequest, map[string]string{
 			"error": err.Error(),
 		})
@@ -157,6 +171,32 @@ func (h *Handler) Update(c echo.Context) error {
 	// 4 -> retornar resposta com mensagem e budget atualizado
 	return c.JSON(http.StatusOK, map[string]interface{}{
 		"message": "orçamento atualizado com sucesso",
-		"budget": budget,
+		"budget":  budget,
 	})
+}
+
+// Delete remove um orçamento e seus itens
+func (h *Handler) Delete(c echo.Context) error {
+	// 1 -> ler ID da URL
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "id inválido",
+		})
+	}
+
+	// 2 -> chamar o service para deletar
+	if err := h.svc.Delete(c.Request().Context(), id); err != nil {
+		if err.Error() == "orçamento não encontrado" {
+			return c.JSON(http.StatusNotFound, map[string]string{
+				"error": err.Error(),
+			})
+		}
+		return c.JSON(http.StatusInternalServerError, map[string]string{
+			"error": err.Error(),
+		})
+	}
+
+	// 3 -> retornar 204 No Content (padrão REST para DELETE bem-sucedido)
+	return c.NoContent(http.StatusNoContent)
 }
