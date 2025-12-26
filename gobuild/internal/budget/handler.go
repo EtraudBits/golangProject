@@ -23,6 +23,7 @@ func (h *Handler) RegisterRoutes (g *echo.Group) {
 	g.GET("", h.List)
 	g.GET("/:id", h.GetByID)
 	g.PUT("/:id/cancel", h.Cancel)
+	g.PUT("/:id", h.Update)
 }
 
 // CreateItemRequest represeta um item enviado pelo o cliente
@@ -31,6 +32,11 @@ type CreateItemRequest struct {
 	Quantity float64 `json:"quantity"`
 }
 type CreateBudgetRequest struct {
+	Customer string `json:"customer"`
+	Items []CreateItemRequest `json:"items"`
+}
+
+type updateBudgetRequest struct {
 	Customer string `json:"customer"`
 	Items []CreateItemRequest `json:"items"`
 }
@@ -112,5 +118,45 @@ func (h *Handler) Cancel (c echo.Context) error {
 	}
 	return c.JSON(http.StatusOK, map[string]string {
 		"message": "orçamento cancelado com sucesso",
+	})
+}
+
+// Updata atualiza um orçamento existente
+func (h *Handler) Update(c echo.Context) error {
+
+	// 1 -> ler ID da URL
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "id inválido",
+		})
+	}
+
+	// 2 -> ler o corpo da requisição
+	var req updateBudgetRequest
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": "JSON inválido",
+		})
+	}
+
+	// 3 -> chamar o service
+	budget, err := h.svc.Update(
+		c.Request().Context(),
+		id,
+		req.Customer,
+		req.Items,
+	)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"error": err.Error(),
+		})
+	}
+
+	// 4 -> retornar resposta com mensagem e budget atualizado
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"message": "orçamento atualizado com sucesso",
+		"budget": budget,
 	})
 }
